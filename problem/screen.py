@@ -238,7 +238,8 @@ def solve(X, Y, flux0, flux, dt, tol,
             # other files made after the checkpoint file we are using.
             timestep = start_step + timestep + 1
 
-        print(timestep)
+        if timestep%1000 == 0:
+            print(timestep)
 
         # Test whether algorithm is stable
         if nan_exception and np.any(np.isnan(phin)):
@@ -316,13 +317,20 @@ def solve(X, Y, flux0, flux, dt, tol,
                                     - phin[Nxrand,Nyrand])
 
         RMSfluxerror[timestep] = np.sqrt(np.mean((phi_derived-phin)**2))
+        MAXfluxerror = np.max(np.abs(phi_derived-phin))
 
         # Finally update phin for the next timestep.
         phin = phi_derived
 
         # TODO figure out a better way to do the tolerance checking for steady
         # state solution.
-        if np.linalg.norm(Fn) < tol:
+        # Maybe using MAX(ABS(FN)) or RMS(FN) is better?
+        max_abs_Fn = np.max(np.abs(Fn))
+        min_abs_Fn = np.min(np.abs(Fn))
+        rms_abs_Fn = np.sqrt(np.mean(Fn**2))
+        if timestep%1000 == 0:
+            print("Min(Abs(Fn)) = {0:.3e}, Max(Abs(Fn)) = {1:.3e}, RMS(Abs(Fn)) = {2:.3e}".format(min_abs_Fn, max_abs_Fn, rms_abs_Fn))
+        if rms_abs_Fn < tol:
             break
 
         if chk:
